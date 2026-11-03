@@ -1,594 +1,116 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101d32">
-  <title>myLUAS — Live tram times</title>
-  <style>
-    /* Calm navy, bright mint, and warm white with system fonts. */
-    :root {
-      color-scheme: dark;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #101d32;
-      color: #f5f7fb;
-      --muted: #b9c6d8;
-      --mint: #83f3cb;
-      --panel: #192a43;
-      --border: #354861;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>myLUAS | Live tram dashboard</title>
+<style>
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    main {
-      width: min(100% - 32px, 860px);
-      margin: 0 auto;
-      padding: 36px 0;
-      flex: 1;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2.6rem, 8vw, 4rem);
-      letter-spacing: -0.065em;
-    }
-
-    h1 span { color: var(--mint); }
-
-    .intro {
-      color: var(--muted);
-      margin: 8px 0 30px;
-      line-height: 1.6;
-    }
-
-    label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .controls {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    select, button {
-      min-height: 52px;
-      font: inherit;
-      border-radius: 12px;
-    }
-
-    select {
-      flex: 1;
-      min-width: 0;
-      width: 100%;
-      padding: 12px;
-      color: #f5f7fb;
-      background: var(--panel);
-      border: 1px solid var(--border);
-    }
-
-    button {
-      padding: 12px 20px;
-      background: var(--mint);
-      color: #101d32;
-      border: 0;
-      font-weight: 750;
-      cursor: pointer;
-    }
-
-    button:disabled { opacity: 0.65; cursor: wait; }
-
-    :focus-visible {
-      outline: 3px solid var(--mint);
-      outline-offset: 4px;
-    }
-
-    .status {
-      min-height: 1.5em;
-      margin: 14px 0 22px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .notice {
-      margin-bottom: 20px;
-      padding: 16px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      line-height: 1.6;
-      overflow-wrap: anywhere;
-    }
-
-    .notice strong { display: block; }
-
-    .error {
-      background: #452632;
-      border-color: #ef9aab;
-      color: #ffe3e9;
-    }
-
-    [hidden] { display: none !important; }
-
-    .stop-heading {
-      font-size: 1.6rem;
-      margin: 28px 0 16px;
-    }
-
-    .directions {
-      display: grid;
-      gap: 18px;
-    }
-
-    .direction {
-      min-width: 0;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-    }
-
-    .direction h3 {
-      margin: 0;
-      padding: 20px;
-      font-size: 1.1rem;
-      border-bottom: 1px solid var(--border);
-      overflow-wrap: anywhere;
-    }
-
-    .tram-list {
-      list-style: none;
-      margin: 0;
-      padding: 0 20px;
-    }
-
-    .tram {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 18px;
-      padding: 20px 0;
-    }
-
-    .tram + .tram { border-top: 1px solid var(--border); }
-
-    .destination {
-      font-size: 1.05rem;
-      font-weight: 600;
-      overflow-wrap: anywhere;
-    }
-
-    .arrival {
-      flex-shrink: 0;
-      text-align: right;
-      color: var(--mint);
-    }
-
-    .arrival strong {
-      display: block;
-      font-size: 2.8rem;
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: -0.05em;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .arrival small {
-      display: block;
-      margin-top: 5px;
-      color: var(--muted);
-    }
-
-    .empty {
-      padding: 20px;
-      color: var(--muted);
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    footer {
-      padding: 24px 16px;
-      color: var(--muted);
-      text-align: center;
-      font-size: 0.8rem;
-      line-height: 1.7;
-      border-top: 1px solid var(--border);
-    }
-
-    @media (min-width: 680px) {
-      main { padding-top: 56px; }
-      .directions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-  </style>
+:root{color-scheme:light;--bg:#fdfdff;--panel:#fff;--header:#f8f7ff;--side:#fbfaff;--soft:#f8f7fd;--selected:#eee9ff;--text:#101229;--muted:#52576d;--border:#dedfeb;--rule:#ececf4;--purple:#5122bf;--purple-soft:#ede7ff;--green:#176126;--green-bg:#e8f6e9;--red:#da3e48;--red-bg:#fff0f2;--amber:#875209;--amber-bg:#fff5df;--shadow:0 2px 3px #211b3510;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#141521;--panel:#1e2030;--header:#1d1b30;--side:#191a29;--soft:#252638;--selected:#37304f;--text:#f4f2ff;--muted:#b9b8ce;--border:#404057;--rule:#34354b;--purple:#c1a6ff;--purple-soft:#393052;--green:#afe7b7;--green-bg:#253c2e;--red:#ff9da8;--red-bg:#442a35;--amber:#ffcf86;--amber-bg:#433923;--shadow:0 2px 5px #0003}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);line-height:1.45}a{color:inherit}button,select{font:inherit}button,select{min-height:48px;max-width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text)}button{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-weight:600;cursor:pointer}button:hover{background:var(--purple-soft);border-color:var(--purple)}button:disabled{opacity:.55;cursor:default}button.primary{color:#fff;background:linear-gradient(110deg,#6324da,#5020bf);border-color:#5421bf;box-shadow:0 1px 2px #45239520}:focus-visible{outline:3px solid var(--purple);outline-offset:3px}[hidden]{display:none!important}.icon{width:24px;height:24px;flex-shrink:0;vertical-align:middle}header{background:var(--header);border-bottom:1px solid var(--border)}.topbar{max-width:1600px;margin:auto;min-height:105px;padding:20px 42px 20px 56px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:20px;text-decoration:none}.brand>.icon{width:51px;height:57px;color:var(--purple)}.brand-copy{display:grid;gap:2px}.brand-copy b{font-size:32px;font-weight:800;letter-spacing:-.035em;line-height:1.2}.brand-copy small{font-size:17px;color:var(--muted);font-weight:400}.header-actions{display:flex;gap:20px}.header-actions button{background:transparent;font-size:16px;padding:11px 20px}.header-actions #theme{width:56px;padding:10px}.layout{max-width:1600px;margin:auto;display:grid;grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - 106px)}.sidebar{background:var(--side);border-right:1px solid var(--rule);padding:48px 20px}.sidebar nav{display:grid;gap:8px;position:sticky;top:24px}.sidebar a{display:flex;gap:16px;align-items:center;padding:15px 20px;min-height:59px;border-radius:11px;text-decoration:none;font-size:19px;font-weight:550}.sidebar a:first-child{color:var(--purple);background:var(--selected)}.sidebar a:hover{background:var(--selected)}.mobile-nav{display:none}main.shell{min-width:0;padding:36px 40px 40px}.dashboard-heading{position:relative;padding:0 0 20px;min-height:92px}.dashboard-heading h1{font-size:39px;line-height:1.2;letter-spacing:-.035em;font-weight:800;margin:0;position:relative;z-index:1}.dashboard-heading::after{content:"Check real-time tram times and plan your journey.";display:block;color:var(--muted);font-size:17px;margin-top:10px;position:relative;z-index:1}.heading-art{position:absolute;right:-5px;bottom:5px;width:245px;height:90px;opacity:.26;pointer-events:none;color:#8e7df0}h2{margin:0;font-size:28px;letter-spacing:-.03em;line-height:1.25;display:flex;align-items:center;gap:13px}h2>.icon{color:var(--purple);width:28px;height:28px}h3{margin:0;font-size:20px}.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:20px}.fine,.status{font-size:12px;color:var(--muted)}.muted,.subtitle,.empty{color:var(--muted)}p{overflow-wrap:anywhere}section{scroll-margin-top:20px}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}#stop-controls{background:var(--soft);box-shadow:none;padding:12px 16px}.toolbar{display:flex;align-items:end;flex-wrap:wrap;gap:12px}.picker{flex:1 1 230px;min-width:0}label{display:block;font-size:12px;color:var(--muted);font-weight:650;margin-bottom:5px}select{width:100%;min-height:44px;font-weight:550}#stop-controls button{min-height:44px;font-size:14px}#save{color:var(--purple)}.status{margin:8px 0 0}#departures{margin-top:16px}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:30px}#selected-cards{grid-template-columns:1fr}.main-arrivals{padding:19px 22px 16px}.main-stop-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.main-stop-heading h3{font-size:26px;letter-spacing:-.03em}.badge{font-size:15px;color:var(--muted)}.main-stop-heading .badge{border-radius:7px;background:var(--soft);padding:5px 10px;font-size:12px;font-weight:650}.main-stop-heading .badge.green{background:var(--green-bg);color:var(--green)}.main-stop-heading .badge.red{background:var(--red-bg);color:var(--red)}.main-arrivals>.fine{margin:4px 0 14px;font-size:11px}.directions{display:grid;gap:16px}.main-boards{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.arrival-board{min-width:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;padding:0 16px;background:var(--panel)}.arrival-board h4.board-label{margin:0 -16px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--soft);border-left:4px solid var(--purple);color:var(--purple);font-size:12px;letter-spacing:.08em}.arrival-board:nth-child(2) h4.board-label{border-left-color:#8991ba}.direction-name{font-size:12px;color:var(--muted);margin:9px 0 3px}.board-columns{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:8px 0;border-bottom:1px solid var(--rule)}ul.arrivals{list-style:none;padding:0;margin:0}.tram{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule)}.tram:last-child{border:0}.destination{min-width:0;overflow-wrap:anywhere;font-size:16px;font-weight:500;display:flex;align-items:center;gap:9px}.destination::before{content:"→";color:var(--muted)}.due{display:flex;align-items:baseline;gap:4px;flex-shrink:0;border-radius:8px;padding:5px 11px;color:var(--green);background:var(--green-bg);font-variant-numeric:tabular-nums}.due strong{font-size:17px;font-weight:650}.due small{font-size:13px}.main-arrivals .tram{min-height:74px}.main-arrivals .due{display:block;min-width:74px;text-align:center;background:var(--purple-soft);color:var(--text);padding:6px 10px}.main-arrivals .due strong{font-size:39px;line-height:1;font-weight:800;letter-spacing:-.04em}.main-arrivals .due small{display:block;font-size:10px;color:var(--muted)}.main-arrivals .tram:first-child .due{background:var(--green-bg);color:var(--green)}.service{font-size:11px;background:var(--soft);color:var(--muted);border-radius:7px;padding:9px 11px;margin:12px 0 0}.service strong{color:var(--text)}.board-state{min-height:100px;color:var(--muted);font-size:14px;padding:10px 0}.error-state{color:var(--red)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:27px 0 20px}.section-head>.fine{font-size:11px}.stop-card{position:relative;overflow:hidden;padding:19px 22px 16px 32px;min-width:0}.stop-card::before{position:absolute;content:"";left:0;top:0;bottom:0;width:8px;background:var(--purple)}.stop-card.red::before{background:var(--red)}.stop-card.green::before{background:#23852f}[data-theme="dark"] .stop-card.green::before{background:#75bc84}.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.card-title{min-width:0;display:flex;flex-direction:column-reverse}.card-title h3{font-size:24px;letter-spacing:-.03em;overflow-wrap:anywhere;margin:0 0 3px}.card-actions{display:flex;align-items:center;gap:5px}.card-actions .select-favourite{font-size:11px;min-height:36px;padding:6px 8px;color:var(--purple)}.favourite-star{border:0;background:transparent;color:#efb21c;font-size:27px;padding:0;min-width:44px}.stop-card>.fine{font-size:10px;margin:8px 0}.stop-card .service{margin:8px 0;font-size:10px}.direction h4{font-size:11px;font-weight:600;color:var(--muted);margin:6px 0 0}.empty{font-size:14px}.feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:30px}.feature-grid>.panel{min-width:0;background:linear-gradient(var(--soft),var(--panel) 70%);padding:20px 24px}.run-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:0 -24px 16px;padding:0 24px 17px;border-bottom:1px solid var(--rule)}.run-heading h2{font-size:26px}.run-heading button{font-size:12px;min-height:42px;padding:8px 11px}.feature-grid .fine{font-size:12px;line-height:1.6}.feature-grid .muted{font-size:14px}.run-results{display:grid;gap:12px;margin-top:14px}.run-item{padding:15px 17px;border-radius:10px;background:var(--green-bg)}.run-item:has(.late){background:var(--red-bg)}.run-item:has(.run){background:var(--amber-bg)}.run-item h3{font-size:13px;color:var(--muted)}.run-item p{margin:6px 0}.verdict{display:block;color:var(--green);font-size:25px;font-weight:750;margin-top:5px}.verdict.run{color:var(--amber)}.verdict.late{color:var(--red)}.nearest-result{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 0 18px;min-height:100px}.nearest-copy{flex:1 1 140px;min-width:0}.nearest-copy h3{font-size:23px;letter-spacing:-.03em;overflow-wrap:anywhere}.nearest-copy p{margin:5px 0}.soft-button{background:var(--purple-soft);color:var(--purple);border-color:transparent;font-size:14px;min-height:46px}#all-stops,#about{margin-top:26px;background:var(--panel)}#all-stops h2,#about h2{font-size:22px}.stop-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.stop-list h3{margin:16px 0 10px}.stop-links{display:flex;flex-wrap:wrap;gap:8px}.stop-links button{font-size:13px;text-align:left;overflow-wrap:anywhere}.stop-links button[aria-pressed="true"]{color:var(--purple);background:var(--purple-soft);border-color:var(--purple)}.alert{padding:13px 16px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:10px;white-space:pre-line;margin:14px 0;overflow-wrap:anywhere}footer{padding:23px 16px;border-top:1px solid var(--border);background:var(--side);color:var(--muted);font-size:11px;text-align:center}
+@media(min-width:1600px){.layout{border-left:1px solid var(--rule);border-right:1px solid var(--rule)}}
+@media(min-width:760px) and (max-width:1200px){.layout{grid-template-columns:220px minmax(0,1fr)}.sidebar{padding:34px 14px}.sidebar a{font-size:17px;padding:13px}.topbar{padding-left:30px;padding-right:30px}main.shell{padding:30px 25px}.dashboard-heading h1{font-size:33px}.heading-art{opacity:.15}.cards{gap:18px}.feature-grid{grid-template-columns:1fr}.card-title h3{font-size:21px}.card-actions{flex-wrap:wrap}.main-arrivals{padding:17px}.main-boards{gap:14px}.main-arrivals .due{min-width:62px}.main-arrivals .due strong{font-size:34px}.main-arrivals .destination{font-size:14px}}
+@media(max-width:759px){.topbar{min-height:83px;padding:15px 16px;gap:12px}.brand{gap:10px}.brand>.icon{width:32px;height:41px}.brand-copy b{font-size:25px}.brand-copy small{font-size:11px;margin-top:3px}.header-actions{gap:0}.header-actions #header-nearest{display:none}.header-actions #theme{width:44px;min-height:44px;padding:9px}.layout{display:block}.sidebar{display:none}.mobile-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:6px 9px;gap:3px;background:var(--header);border-bottom:1px solid var(--border)}.mobile-nav a{display:flex;align-items:center;justify-content:center;text-decoration:none;min-height:44px;border-radius:8px;font-size:12px;color:var(--muted)}.mobile-nav a:first-child{color:var(--purple);background:var(--selected)}.mobile-nav .icon{display:none}main.shell{padding:22px 14px 30px}.dashboard-heading{min-height:0;padding-bottom:17px}.dashboard-heading h1{font-size:29px}.dashboard-heading::after{font-size:13px;margin-top:8px}.heading-art{display:none}#stop-controls{padding:12px}.toolbar{gap:8px}.picker{flex-basis:100%}#stop-controls button{flex:1 1 120px;font-size:13px}#departures{margin-top:14px}.main-arrivals{padding:16px 13px}.main-stop-heading h3{font-size:22px}.main-stop-heading .badge{font-size:11px}.main-boards,.cards,.feature-grid,.stop-list{grid-template-columns:1fr}.main-boards{gap:15px}.main-arrivals .destination{font-size:15px}.main-arrivals .due strong{font-size:38px}.main-arrivals .tram{min-height:72px}.cards{gap:16px}.section-head{margin:24px 0 15px;gap:6px}.section-head h2{font-size:25px}.section-head>.fine{font-size:10px}.stop-card{padding:17px 16px 15px 25px}.card-title h3{font-size:23px}.card-actions .select-favourite{font-size:10px;padding:5px 7px;min-height:40px}.feature-grid{gap:18px;margin-top:24px}.feature-grid>.panel{padding:18px}.run-heading{margin-left:-18px;margin-right:-18px;padding:0 18px 15px}.run-heading h2{font-size:24px}.run-heading button{font-size:11px;min-height:44px}.nearest-copy h3{font-size:22px}#all-stops,#about{padding:18px}.due{white-space:nowrap}.board-state{min-height:86px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
 </head>
 <body>
-  <main>
-    <header>
-      <h1>my<span>LUAS</span></h1>
-      <p class="intro">Your stop. Your next tram. Live times, refreshed every 20 seconds.</p>
-    </header>
+<header><div class="topbar"><a class="brand" href="#home"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="16" rx="4"/><path d="M8 19l-2 3m10-3 2 3M5 12h14M8 6h8"/><circle cx="8.5" cy="15.5" r=".6"/><circle cx="15.5" cy="15.5" r=".6"/></svg><span class="brand-copy"><b>myLUAS</b><small>Live Luas arrivals &middot; Dublin</small></span></a><div class="header-actions"><button id="header-nearest"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1116 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Find nearest stop</button><button id="theme" aria-label="Switch to dark mode" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 13A9 9 0 0111 3a9 9 0 1010 10Z"/></svg></button></div></div></header>
+<nav class="mobile-nav" aria-label="Mobile navigation"><a href="#home"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-8 9 8M5 9v12h5v-7h4v7h5V9"/></svg>Home</a><a href="#favourites"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/></svg>Favourites</a><a href="#all-stops"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5h13M8 12h13M8 19h13M3 5h.1M3 12h.1M3 19h.1"/></svg>All Stops</a><a href="#about"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>About</a></nav>
+<div class="layout"><aside class="sidebar"><nav aria-label="Main navigation"><a href="#home"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-8 9 8M5 9v12h5v-7h4v7h5V9"/></svg>Home</a><a href="#favourites"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/></svg>Favourites</a><a href="#all-stops"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5h13M8 12h13M8 19h13M3 5h.1M3 12h.1M3 19h.1"/></svg>All Stops</a><a href="#about"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>About</a></nav></aside>
+<main class="shell" id="home">
+<div class="dashboard-heading"><h1>Live Luas Arrivals</h1><svg class="heading-art" viewBox="0 0 320 120" fill="none" aria-hidden="true"><g fill="currentColor" opacity=".4"><path d="M5 100h30v12H5zm40-12h30v24H45zm40 9h20v15H85zm30-38h42v53h-42zm7-6h29v6h-29zm49 30h20v29h-20zm125-12h18v41h-18z"/></g><g stroke="currentColor"><path stroke-width="3" d="M0 113h320M214 8q24 41 50 94l22 11M214 8l90 99"/><path d="m215 12-109 94m112-89-98 89m102-83-85 83m89-76-76 76m80-70-67 70m71-63-57 63m62-56-48 56m52-48-38 48m42-40-28 40"/></g></svg></div>
+<section class="panel" aria-label="Stop controls" id="stop-controls"><div class="toolbar"><div class="picker"><label for="stop">Choose your stop</label><select id="stop" disabled><option>Loading stops...</option></select></div><button id="save" disabled>Save favourite</button><button id="refresh" class="primary">Refresh arrivals</button></div><p class="status" id="status" role="status">Loading live information...</p></section>
+<div id="errors" class="alert" role="alert" hidden></div>
+<section id="departures" aria-labelledby="departures-title"><h2 id="departures-title" class="sr-only">Selected stop live arrivals</h2><div id="selected-cards" class="cards"></div></section>
+<section id="favourites" aria-labelledby="favourites-title"><div class="section-head"><h2 id="favourites-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/></svg>Your Favourites</h2><span class="fine">Up to two stops / saved on this device</span></div><div id="favourite-cards" class="cards"></div></section>
 
-    <label for="stop">Choose your stop</label>
-    <div class="controls">
-      <select id="stop" disabled>
-        <option value="MYS">Loading stops…</option>
-      </select>
-      <button id="refresh" type="button">Refresh</button>
-    </div>
-
-    <p id="status" class="status" role="status" aria-live="polite">
-      Loading live tram times…
-    </p>
-
-    <div id="error" class="notice error" role="alert" hidden></div>
-
-    <section class="notice" aria-labelledby="message-heading">
-      <strong id="message-heading">Service message</strong>
-      <span id="message">Waiting for live information…</span>
-    </section>
-
-    <section aria-labelledby="stop-heading">
-      <h2 id="stop-heading" class="stop-heading">Live departures</h2>
-      <div id="directions" class="directions" aria-busy="true"></div>
-    </section>
-
-    <noscript>
-      <p class="notice error">Please enable JavaScript to load stops and live tram times.</p>
-    </noscript>
-  </main>
-
-  <footer>
-    Data: Transport Infrastructure Ireland. Built by [your name] for BDAIB.
-  </footer>
-
-  <script>
-    "use strict";
-
-    const BASE_URL = "https://luas-class.kluxy.app";
-    const STORAGE_KEY = "myLUAS.stop";
-    const DEFAULT_STOP = "MYS";
-
-    const stopSelect = document.getElementById("stop");
-    const refreshButton = document.getElementById("refresh");
-    const statusElement = document.getElementById("status");
-    const errorElement = document.getElementById("error");
-    const messageElement = document.getElementById("message");
-    const stopHeading = document.getElementById("stop-heading");
-    const directionsElement = document.getElementById("directions");
-
-    const errors = new Map();
-    let selectedStop = DEFAULT_STOP;
-    let stopsLoaded = false;
-    let stopsRequest = null;
-    let forecastController = null;
-    let requestNumber = 0;
-    let lastUpdated = null;
-    let refreshing = false;
-
-    function setError(key, message) {
-      if (message) errors.set(key, message);
-      else errors.delete(key);
-
-      errorElement.textContent = Array.from(errors.values()).join(" ");
-      errorElement.hidden = errors.size === 0;
-    }
-
-    function errorMessage(error) {
-      return error instanceof Error ? error.message : String(error);
-    }
-
-    function updateStatus() {
-      const time = lastUpdated
-        ? lastUpdated.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-          })
-        : "—";
-
-      statusElement.textContent =
-        `Last updated: ${time} · ` +
-        (refreshing ? "Refreshing…" : "Auto-refresh every 20 seconds");
-    }
-
-    async function fetchJSON(url, signal) {
-      const controller = new AbortController();
-      let timedOut = false;
-
-      const cancel = () => controller.abort();
-      if (signal) {
-        if (signal.aborted) cancel();
-        else signal.addEventListener("abort", cancel, { once: true });
+<div class="feature-grid"><section id="should-i-run" class="panel run-panel" aria-labelledby="run-title"><div class="run-heading"><h2 id="run-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="15" cy="4" r="2"/><path d="m12 8 4 4 4-1M12 8l-4 5-5 1m8-3 4 5-2 6m-3-9-3 5H2"/></svg>Should I Run?</h2><button id="walking">Estimate my walk</button></div><p class="fine">Straight-line estimate at 5 km/h, not a walking route. Excludes crossings and platform access. Run means a tight connection.</p><p id="walk-summary" class="muted" role="status">Use GPS to compare your estimated walk with the next tram.</p><div id="run-results" class="run-results"></div></section>
+<section id="nearest-stop" class="panel" aria-labelledby="nearest-title"><div class="run-heading"><h2 id="nearest-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1116 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Nearest Stop</h2><button id="nearest">Find nearest stop</button></div><div id="nearest-result" class="nearest-result"><p class="muted">Find your closest stop using your current location.</p></div><p class="fine">Straight-line distance. Location permission is requested only on click.</p><p class="status" id="location-status" role="status">Your location is never saved.</p></section>
+</div><section id="all-stops" class="panel" aria-labelledby="all-stops-title"><h2 id="all-stops-title">All Stops</h2><p class="fine">Choose a stop to see its live arrivals.</p><div id="stop-list" class="stop-list"><p class="empty">Loading stops...</p></div></section>
+<section id="about" class="panel" aria-labelledby="about-title"><h2 id="about-title">About myLUAS</h2><p class="fine">Live Luas forecasts supplied by Transport Infrastructure Ireland through the existing Luas data service. Arrivals refresh every 20 seconds; each stop shows its last successful update. Times and service messages come from the data feed.</p><p class="fine">Your selected stop and up to two favourites are stored in this browser. Walking estimates use your current GPS position only when requested and are not route guidance or a guarantee of catching a tram.</p></section>
+<noscript><p class="alert">Enable JavaScript to load stops and live arrivals.</p></noscript>
+</main></div><footer>Data: Transport Infrastructure Ireland. Built by [your name] for BDAIB.</footer>
+<script>
+"use strict";
+const BASE_URL = "https://luas-class.kluxy.app";
+const $ = id => document.getElementById(id);
+const errors = new Map(), forecasts = new Map(), pending = new Map();
+let stops = [], selected = readStored("myLUAS.stop", "MYS"), favourites = [], locationFix = null, locating = false, refreshing = false;
+try { const saved = JSON.parse(readStored("myLUAS.favourites", "[]")); if (!Array.isArray(saved) || saved.some(id => typeof id !== "string")) throw new Error("Invalid favourite preferences."); favourites = [...new Set(saved)].slice(0, 2); } catch(error) { setError("preferences", "Could not read favourites: " + error.message); }
+function setError(key, message) { if(message) errors.set(key,message); else errors.delete(key); $("errors").textContent = [...errors.values()].join("\n"); $("errors").hidden = !errors.size; }
+function readStored(key, fallback) { try { return localStorage.getItem(key) || fallback; } catch(error) { setError("storage", "Preferences cannot be read: " + error.message); return fallback; } }
+function store(key, value) { try { localStorage.setItem(key,value); setError("storage",null); } catch(error) { setError("storage","Preferences cannot be saved: " + error.message); } }
+function el(tag, className, text) { const node = document.createElement(tag); if(className) node.className = className; if(text !== undefined) node.textContent = text; return node; }
+function time(date) { return date.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"}); }
+async function fetchJSON(path) { const controller = new AbortController(); const timer = setTimeout(() => controller.abort(),12000); try { const response = await fetch(BASE_URL + path,{signal:controller.signal,cache:"no-store"}); if(!response.ok) throw new Error("HTTP " + response.status); return await response.json(); } catch(error) { if(error.name === "AbortError") throw new Error("Request timed out. Please try Refresh."); throw error; } finally { clearTimeout(timer); } }
+function stopById(id) { return stops.find(stop => stop.id === id); }
+function hasCoords(stop) { return stop && stop.lat !== null && stop.lng !== null && String(stop.lat).trim() !== "" && String(stop.lng).trim() !== "" && Number.isFinite(Number(stop.lat)) && Number.isFinite(Number(stop.lng)) && Math.abs(Number(stop.lat)) <= 90 && Math.abs(Number(stop.lng)) <= 180; }
+async function loadStops() { try { const data = await fetchJSON("/stops"); if(!data || !Array.isArray(data.stops) || !data.stops.length || data.stops.some(s => !s || typeof s.id !== "string" || typeof s.name !== "string" || !["red","green"].includes(s.line))) throw new Error("Invalid stop list received."); stops = data.stops; if(!stopById(selected)) { selected = stopById("MYS") ? "MYS" : stops[0].id; store("myLUAS.stop",selected); } favourites = favourites.filter(id => stopById(id)); store("myLUAS.favourites",JSON.stringify(favourites)); $("stop").replaceChildren(); for(const line of ["red","green"]) { const group = el("optgroup"); group.label = line === "red" ? "Red Line" : "Green Line"; stops.filter(s => s.line === line).sort((a,b) => a.name.localeCompare(b.name)).forEach(s => { const option = el("option","",s.name); option.value=s.id; group.append(option); }); $("stop").append(group); } $("stop").value = selected; $("stop").disabled=false; setError("stops",null); } catch(error) { setError("stops","Could not load stops: " + error.message); } }
+function validateForecast(data) { if(!data || typeof data.stopName !== "string" || typeof data.message !== "string" || !Array.isArray(data.directions)) throw new Error("Invalid live departure information."); for(const d of data.directions) { if(!d || typeof d.name !== "string" || !Array.isArray(d.trams)) throw new Error("Invalid direction information."); for(const t of d.trams) if(!t || typeof t.destination !== "string" || t.due === null || String(t.due).trim() === "" || !Number.isFinite(Number(t.due)) || Number(t.due)<0) throw new Error("Invalid tram arrival information."); } }
+function loadForecast(id) { if(pending.has(id)) return pending.get(id); const task = (async () => { try { const data = await fetchJSON("/forecast?stop=" + encodeURIComponent(id)); validateForecast(data); forecasts.set(id,{data,updated:new Date(),failed:false}); setError("forecast:"+id,null); } catch(error) { const previous = forecasts.get(id); forecasts.set(id,{...previous,failed:true}); setError("forecast:"+id,"Could not load " + (stopById(id)?.name || id) + ": " + error.message + (previous?.data ? " Previous arrivals are out of date." : "")); } finally { pending.delete(id); render(); } })(); pending.set(id,task); return task; }
+async function refresh() { if(refreshing) return; refreshing=true; $("refresh").disabled=true; $("status").textContent="Refreshing live arrivals..."; try { if(!stops.length) await loadStops(); render(); await Promise.all([...new Set([selected,...favourites])].map(loadForecast)); } finally { refreshing=false; $("refresh").disabled=false; $("status").textContent="Refreshes every 20 seconds."; render(); } }
+function selectStop(id) { selected=id; if(stops.length) $("stop").value=id; store("myLUAS.stop",id); render(); void loadForecast(id); }
+function toggleFavourite(id) { if(favourites.includes(id)) { favourites=favourites.filter(s => s!==id); setError("limit",null); } else { if(favourites.length>=2) { setError("limit","You can save two favourites. Remove one below before adding another."); return; } favourites.push(id); setError("limit",null); } store("myLUAS.favourites",JSON.stringify(favourites)); render(); if(favourites.includes(id)) void loadForecast(id); }
+// Main arrivals have their own renderer so loading/empty/error states never remove the boards.
+function makeMainArrivals(id) {
+  const stop=stopById(id), entry=forecasts.get(id), card=el("article","panel main-arrivals");
+  const head=el("div","main-stop-heading");
+  head.append(el("h3","",stop?.name || entry?.data?.stopName || id),el("span","badge "+(stop?.line || ""),stop ? (stop.line === "red" ? "Red Line" : "Green Line") : "Luas"));
+  card.append(head);
+  const stamp=entry?.updated ? "Last updated: "+time(entry.updated) : "Waiting for first update";
+  card.append(el("p","fine",stamp+(entry?.failed ? " / Update failed. Previous times are stale." : "")));
+  const boards=el("div","directions main-boards");
+  const directions=entry?.data?.directions || [];
+  // Prefer direction labels supplied by the feed; retain its order for other names.
+  const inbound=directions.find(d=>/inbound/i.test(d.name));
+  const outbound=directions.find(d=>/outbound/i.test(d.name));
+  const unused=directions.filter(d=>d!==inbound && d!==outbound);
+  const slots=[inbound || unused.shift(),outbound || unused.shift()];
+  for(let index=0;index<2;index++) {
+    const direction=slots[index], board=el("section","direction arrival-board"), label=index===0 ? "INBOUND" : "OUTBOUND";
+    board.append(el("h4","board-label",label));
+    if(direction && !/^(inbound|outbound)$/i.test(direction.name.trim())) board.append(el("p","direction-name",direction.name));
+    const columns=el("div","board-columns"); columns.append(el("span","","Destination"),el("span","","Arrival")); board.append(columns);
+    const trams=direction ? [...direction.trams].sort((a,b)=>Number(a.due)-Number(b.due)).slice(0,3) : [];
+    if(trams.length) {
+      const list=el("ul","arrivals");
+      for(const tram of trams) {
+        const row=el("li","tram"), due=el("span","due");
+        due.append(el("strong","",Number(tram.due)===0 ? "Due" : String(Number(tram.due))),el("small","",Number(tram.due)===0 ? "now" : Number(tram.due)===1 ? "minute" : "minutes"));
+        row.append(el("span","destination",tram.destination),due); list.append(row);
       }
-
-      const timeout = setTimeout(() => {
-        timedOut = true;
-        controller.abort();
-      }, 12000);
-
-      try {
-        const response = await fetch(url, {
-          signal: controller.signal,
-          cache: "no-store"
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server returned HTTP ${response.status}.`);
-        }
-
-        return await response.json();
-      } catch (error) {
-        if (timedOut) {
-          throw new Error("The request timed out. Please try again.");
-        }
-        throw error;
-      } finally {
-        clearTimeout(timeout);
-        if (signal) signal.removeEventListener("abort", cancel);
-      }
+      board.append(list);
+      if(entry.failed) board.append(el("p","board-state error-state","Update failed. Times above are from the last successful update."));
+    } else {
+      const message=entry?.failed ? "Unable to load arrivals. Select Refresh arrivals to retry." : !entry?.data ? "Loading live arrivals..." : !direction ? "No forecast supplied for this direction." : "No trams currently forecast for this direction.";
+      const state=el("p","board-state"+(entry?.failed ? " error-state" : ""),message); state.setAttribute("role","status"); board.append(state);
     }
-
-    try {
-      selectedStop = localStorage.getItem(STORAGE_KEY) || DEFAULT_STOP;
-    } catch (error) {
-      setError("storage", `Your stop cannot be remembered: ${errorMessage(error)}`);
-    }
-
-    function rememberStop() {
-      try {
-        localStorage.setItem(STORAGE_KEY, selectedStop);
-        setError("storage", null);
-      } catch (error) {
-        setError("storage", `Your stop cannot be remembered: ${errorMessage(error)}`);
-      }
-    }
-
-    function loadStops() {
-      if (stopsRequest) return stopsRequest;
-
-      stopsRequest = (async () => {
-        try {
-          const data = await fetchJSON(`${BASE_URL}/stops`);
-
-          if (!data || !Array.isArray(data.stops) || !data.stops.length) {
-            throw new Error("The server returned an empty or invalid stop list.");
-          }
-
-          for (const stop of data.stops) {
-            if (
-              !stop ||
-              typeof stop.id !== "string" ||
-              typeof stop.name !== "string" ||
-              !["red", "green"].includes(stop.line)
-            ) {
-              throw new Error("The stop list contains invalid stop information.");
-            }
-          }
-
-          const previousStop = selectedStop;
-          if (!data.stops.some(stop => stop.id === selectedStop)) {
-            selectedStop = data.stops.some(stop => stop.id === DEFAULT_STOP)
-              ? DEFAULT_STOP
-              : data.stops[0].id;
-            rememberStop();
-          }
-
-          const fragment = document.createDocumentFragment();
-
-          for (const line of ["red", "green"]) {
-            const group = document.createElement("optgroup");
-            group.label = line === "red" ? "Red Line" : "Green Line";
-
-            data.stops
-              .filter(stop => stop.line === line)
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .forEach(stop => {
-                const option = document.createElement("option");
-                option.value = stop.id;
-                option.textContent = stop.name;
-                group.append(option);
-              });
-
-            fragment.append(group);
-          }
-
-          stopSelect.replaceChildren(fragment);
-          stopSelect.value = selectedStop;
-          stopSelect.disabled = false;
-          stopsLoaded = true;
-          setError("stops", null);
-
-          if (previousStop !== selectedStop) clearDepartures();
-        } catch (error) {
-          setError("stops", `Could not load stops: ${errorMessage(error)}`);
-        }
-      })().finally(() => {
-        stopsRequest = null;
-      });
-
-      return stopsRequest;
-    }
-
-    function clearDepartures() {
-      lastUpdated = null;
-      directionsElement.replaceChildren();
-      messageElement.textContent = "Waiting for live information…";
-      stopHeading.textContent = "Live departures";
-      setError("forecast", null);
-      updateStatus();
-    }
-
-    function validateForecast(data) {
-      if (
-        !data ||
-        typeof data.stopName !== "string" ||
-        typeof data.message !== "string" ||
-        !Array.isArray(data.directions) ||
-        data.directions.length === 0
-      ) {
-        throw new Error("The server returned invalid departure information.");
-      }
-
-      for (const direction of data.directions) {
-        if (
-          !direction ||
-          typeof direction.name !== "string" ||
-          !Array.isArray(direction.trams)
-        ) {
-          throw new Error("The server returned invalid direction information.");
-        }
-
-        for (const tram of direction.trams) {
-          const due = Number(tram && tram.due);
-          if (
-            !tram ||
-            tram.due === null ||
-            String(tram.due).trim() === "" ||
-            !Number.isFinite(due) ||
-            due < 0 ||
-            typeof tram.destination !== "string"
-          ) {
-            throw new Error("The server returned invalid tram information.");
-          }
-        }
-      }
-    }
-
-    function renderForecast(data) {
-      const fragment = document.createDocumentFragment();
-
-      for (const direction of data.directions) {
-        const card = document.createElement("section");
-        card.className = "direction";
-
-        const heading = document.createElement("h3");
-        heading.textContent = direction.name;
-        card.append(heading);
-
-        const trams = [...direction.trams]
-          .sort((a, b) => Number(a.due) - Number(b.due))
-          .slice(0, 3);
-
-        if (!trams.length) {
-          const empty = document.createElement("p");
-          empty.className = "empty";
-          empty.textContent = "No trams currently forecast for this direction.";
-          card.append(empty);
-        } else {
-          const list = document.createElement("ul");
-          list.className = "tram-list";
-
-          for (const tram of trams) {
-            const due = Number(tram.due);
-            const row = document.createElement("li");
-            row.className = "tram";
-
-            const destination = document.createElement("span");
-            destination.className = "destination";
-            destination.textContent = tram.destination;
-
-            const arrival = document.createElement("span");
-            arrival.className = "arrival";
-
-            const number = document.createElement("strong");
-            number.textContent = due === 0 ? "Due" : String(due);
-            arrival.append(number);
-
-            const unit = document.createElement("small");
-            unit.textContent = due === 0 ? "now" : due === 1 ? "minute" : "minutes";
-            arrival.append(unit);
-
-            row.append(destination, arrival);
-            list.append(row);
-          }
-
-          card.append(list);
-        }
-
-        fragment.append(card);
-      }
-
-      stopHeading.textContent = data.stopName;
-      messageElement.textContent = data.message.trim() || "No service message provided.";
-      directionsElement.replaceChildren(fragment);
-    }
-
-    async function loadForecast() {
-      if (forecastController) forecastController.abort();
-      const controller = new AbortController();
-      forecastController = controller;
-      const thisRequest = ++requestNumber;
-
-      refreshing = true;
-      refreshButton.disabled = true;
-      directionsElement.setAttribute("aria-busy", "true");
-      updateStatus();
-
-      try {
-        const data = await fetchJSON(
-          `${BASE_URL}/forecast?stop=${encodeURIComponent(selectedStop)}`,
-          controller.signal
-        );
-
-        if (thisRequest !== requestNumber) return;
-
-        validateForecast(data);
-        renderForecast(data);
-        lastUpdated = new Date();
-        setError("forecast", null);
-      } catch (error) {
-        if (thisRequest !== requestNumber || controller.signal.aborted) return;
-
-        setError(
-          "forecast",
-          `Could not load live trams: ${errorMessage(error)} ` +
-          (lastUpdated
-            ? "Showing the last successful update; these times may be out of date."
-            : "Please check your connection and try Refresh.")
-        );
-
-        if (!lastUpdated) {
-          messageElement.textContent = "Service information is currently unavailable.";
-        }
-      } finally {
-        if (thisRequest === requestNumber) {
-          refreshing = false;
-          refreshButton.disabled = false;
-          directionsElement.setAttribute("aria-busy", "false");
-          updateStatus();
-        }
-      }
-    }
-
-    async function refresh() {
-      if (!stopsLoaded) await loadStops();
-      await loadForecast();
-    }
-
-    stopSelect.addEventListener("change", () => {
-      selectedStop = stopSelect.value;
-      rememberStop();
-      clearDepartures();
-      void loadForecast();
-    });
-
-    refreshButton.addEventListener("click", () => void refresh());
-
-    void refresh();
-
-    setInterval(() => {
-      if (!refreshing) void refresh();
-    }, 20000);
-  </script>
+    boards.append(board);
+  }
+  card.append(boards);
+  const message=entry?.data ? entry.data.message.trim() || "No service message provided." : entry?.failed ? "Service information unavailable." : "Loading service information...";
+  card.append(el("p","service","Service message: "+message));
+  return card;
+}
+function makeCard(id, favourite) { if(!favourite) return makeMainArrivals(id); const stop=stopById(id), entry=forecasts.get(id), card=el("article","panel stop-card " + (stop?.line || "")); const head=el("div","card-head"), title=el("div","card-title"); title.append(el("span","badge " + (stop?.line || ""),stop ? (stop.line === "red" ? "Red Line" : "Green Line") : "Luas"), el("h3","",stop?.name || entry?.data?.stopName || id)); head.append(title); if(favourite) { const actions=el("div","card-actions"), choose=el("button","select-favourite","View arrivals"), remove=el("button","favourite-star","★"); choose.onclick=() => { selectStop(id); $("departures").scrollIntoView({behavior:"smooth"}); }; remove.setAttribute("aria-label","Remove " + (stop?.name || id) + " from favourites"); remove.onclick=() => toggleFavourite(id); actions.append(choose,remove); head.append(actions); } card.append(head); const stamp=entry?.updated ? "Last updated: " + time(entry.updated) : "Not updated yet"; card.append(el("p","fine",stamp + (entry?.failed ? " / Update failed - arrivals are stale" : ""))); if(!entry?.data) { card.append(el("p","empty",entry?.failed ? "Arrivals unavailable. Use Refresh to retry." : "Loading arrivals...")); return card; } const service=el("p","service"), serviceLabel=el("strong","","Service message: "); service.append(serviceLabel,document.createTextNode(entry.data.message.trim() || "No service message provided.")); card.append(service); const dirs=el("div","directions"); for(const d of entry.data.directions) { const section=el("section","direction"); section.append(el("h4","",d.name)); const list=el("ul","arrivals"); for(const t of [...d.trams].sort((a,b)=>Number(a.due)-Number(b.due)).slice(0,3)) { const row=el("li","tram"), due=el("span","due"); due.append(el("strong","",Number(t.due)===0 ? "Due" : String(t.due)),el("small","",Number(t.due)===0 ? "now" : Number(t.due)===1 ? "minute" : "minutes")); row.append(el("span","destination",t.destination),due); list.append(row); } section.append(list); if(!d.trams.length) section.append(el("p","empty","No trams currently forecast.")); dirs.append(section); } if(!entry.data.directions.length) dirs.append(el("p","empty","No directions currently forecast.")); card.append(dirs); return card; }
+function render() { renderStopList(); renderNearest(); $("selected-cards").replaceChildren(makeCard(selected,false)); $("favourite-cards").replaceChildren(...favourites.map(id=>makeCard(id,true))); if(!favourites.length) $("favourite-cards").append(el("p","empty","Save your regular stops above. Both favourites and their live arrivals will appear here together.")); $("save").disabled=!stops.length; $("save").textContent=favourites.includes(selected) ? "Remove favourite" : "Save favourite"; renderWalk(); }
+function renderNearest() { const box=$("nearest-result"); if(!locationFix || !stops.length) return; const candidates=stops.filter(hasCoords); if(!candidates.length) return; const nearest=candidates.reduce((a,b)=>distance(locationFix,a)<=distance(locationFix,b)?a:b); const metres=distance(locationFix,nearest); const title=el("div","nearest-copy"); title.append(el("h3","",nearest.name),el("p","fine",Date.now()-locationFix.timestamp>120000 ? "Location expired. Find nearest stop again." : "About " + Math.round(metres) + " m away / approx. " + Math.max(1,Math.ceil(metres/(5000/60))) + " min walk (straight-line)")); const view=el("button","soft-button","View arrivals"); view.onclick=()=>{selectStop(nearest.id);$("departures").scrollIntoView({behavior:"smooth"});}; box.replaceChildren(title,view); }
+function renderStopList() { const list=$("stop-list"); if(!stops.length) { list.replaceChildren(el("p","empty","Stop list unavailable or loading. Use Refresh to retry.")); return; } list.replaceChildren(); for(const line of ["red","green"]) { const group=el("section"), heading=el("h3","badge "+line,line === "red" ? "Red Line" : "Green Line"), links=el("div","stop-links"); for(const stop of stops.filter(s=>s.line===line).sort((a,b)=>a.name.localeCompare(b.name))) { const button=el("button","",stop.name); button.setAttribute("aria-pressed",String(stop.id===selected)); button.onclick=()=>{selectStop(stop.id);$("departures").scrollIntoView({behavior:"smooth"});}; links.append(button); } group.append(heading,links); list.append(group); } }
+// Great-circle distance: an estimate of straight-line distance, never a route.
+function distance(a,b) { const rad=n=>n*Math.PI/180, lat=rad(Number(b.lat)-a.lat), lng=rad(Number(b.lng)-a.lng); const h=Math.sin(lat/2)**2 + Math.cos(rad(a.lat))*Math.cos(rad(Number(b.lat)))*Math.sin(lng/2)**2; return 6371000*2*Math.atan2(Math.sqrt(Math.min(1,h)),Math.sqrt(Math.max(0,1-h))); }
+// Use the same rounded-up walking estimate shown to the user. Never allow an impossible walk.
+function verdict(walk, due) { if(!Number.isFinite(walk) || !Number.isFinite(due) || walk<0) return "Unavailable"; if(due<=0 || walk>due) return "Too late"; if(due-walk<2) return "Run"; return "Walk"; }
+function renderWalk() { const results=$("run-results"); results.replaceChildren(); if(!locationFix) return; const age=Date.now()-locationFix.timestamp; if(age>120000) { $("walk-summary").textContent="Your location estimate has expired. Click Estimate my walk to update it."; return; } const stop=stopById(selected); if(!hasCoords(stop)) { $("walk-summary").textContent="Walking estimate unavailable: this stop has no valid coordinates."; return; } const metres=distance(locationFix,stop), walk=Math.max(1,Math.ceil(metres/(5000/60))); $("walk-summary").textContent=`${stop.name}: about ${Math.max(1,Math.ceil(walk))} min on foot (${Math.round(metres)} m straight-line). GPS accuracy: approximately ${Math.round(locationFix.accuracy)} m. Location obtained at ${time(new Date(locationFix.timestamp))}.`; const entry=forecasts.get(selected); if(!entry?.data || entry.failed || Date.now()-entry.updated.getTime()>45000) { results.append(el("p","empty","Waiting for fresh arrivals before comparing your walk.")); return; } for(const d of entry.data.directions) { const box=el("div","run-item"); box.append(el("h3","",d.name)); const next=[...d.trams].sort((a,b)=>Number(a.due)-Number(b.due))[0]; if(!next) box.append(el("p","empty","No next tram forecast.")); else { const remaining=Math.max(0,Number(next.due)-(Date.now()-entry.updated.getTime())/60000), result=verdict(walk,remaining); box.append(el("span","verdict " + (result === "Run" ? "run" : result === "Too late" ? "late" : ""),result),el("p","fine",`${next.destination} / ${remaining<=0 ? "Due now" : "about " + Math.ceil(remaining) + " min"}`),el("p","fine",result==="Walk" ? "Estimated walk fits with at least 2 minutes to spare." : result==="Run" ? "Less than 2 minutes to spare at the assumed walking speed. Connection is tight." : "The next tram is due before the estimated walk is complete.")); } results.append(box); } }
+function locate(nearest) { if(locating) return; setError("location",null); if(!window.isSecureContext || !navigator.geolocation) { setError("location","Location is unavailable here. Use a browser that supports GPS on HTTPS or localhost, or choose a stop manually."); return; } locating=true; $("nearest").disabled=true; $("walking").disabled=true; $("location-status").textContent="Getting your location..."; navigator.geolocation.getCurrentPosition(async position=>{ try { locationFix={lat:position.coords.latitude,lng:position.coords.longitude,accuracy:position.coords.accuracy,timestamp:position.timestamp}; if(!stops.length) await loadStops(); if(nearest) { const candidates=stops.filter(hasCoords); if(!candidates.length) throw new Error("No stop coordinates are available. Try Refresh."); const closest=candidates.reduce((a,b)=>distance(locationFix,a)<=distance(locationFix,b) ? a : b); selectStop(closest.id); $("location-status").textContent="Nearest stop by straight-line distance: " + closest.name + "."; } else { $("location-status").textContent="Location updated for your walking estimate."; renderWalk(); void loadForecast(selected); } } catch(error) { setError("location",error.message); } finally { finishLocation(); } },error=>{ const messages={1:"Location permission was denied. Choose a stop manually, or enable location in your browser settings and try again.",2:"Your location could not be determined. Choose a stop manually or try again.",3:"Getting your location timed out. Please try again."}; setError("location",messages[error.code] || "Location error: " + error.message); $("location-status").textContent="Location unavailable. Manual stop selection is still available."; finishLocation(); },{enableHighAccuracy:true,timeout:15000,maximumAge:0}); }
+function finishLocation() { renderNearest(); locating=false; $("nearest").disabled=false; $("walking").disabled=false; }
+$("stop").addEventListener("change",()=>selectStop($("stop").value)); $("refresh").onclick=()=>void refresh(); $("save").onclick=()=>toggleFavourite(selected); $("nearest").onclick=()=>locate(true); $("walking").onclick=()=>locate(false);
+$("header-nearest").onclick=()=>locate(true);
+function applyTheme(dark) { document.documentElement.setAttribute("data-theme",dark?"dark":"light"); $("theme").setAttribute("aria-pressed",String(dark)); $("theme").setAttribute("aria-label",dark?"Switch to light mode":"Switch to dark mode"); }
+let darkTheme=readStored("myLUAS.theme","light")==="dark"; applyTheme(darkTheme); $("theme").onclick=()=>{darkTheme=!darkTheme;applyTheme(darkTheme);store("myLUAS.theme",darkTheme?"dark":"light");};
+render(); void refresh(); setInterval(()=>void refresh(),20000); setInterval(renderWalk,10000);
+</script>
 </body>
 </html>
