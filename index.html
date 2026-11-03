@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d32">
+  <title>myLUAS — Live tram times</title>
+  <style>
+    /* Calm navy, bright mint, and warm white with system fonts. */
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #101d32;
+      color: #f5f7fb;
+      --muted: #b9c6d8;
+      --mint: #83f3cb;
+      --panel: #192a43;
+      --border: #354861;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      width: min(100% - 32px, 860px);
+      margin: 0 auto;
+      padding: 36px 0;
+      flex: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.6rem, 8vw, 4rem);
+      letter-spacing: -0.065em;
+    }
+
+    h1 span { color: var(--mint); }
+
+    .intro {
+      color: var(--muted);
+      margin: 8px 0 30px;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      min-height: 52px;
+      font: inherit;
+      border-radius: 12px;
+    }
+
+    select {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      padding: 12px;
+      color: #f5f7fb;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+
+    button {
+      padding: 12px 20px;
+      background: var(--mint);
+      color: #101d32;
+      border: 0;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.65; cursor: wait; }
+
+    :focus-visible {
+      outline: 3px solid var(--mint);
+      outline-offset: 4px;
+    }
+
+    .status {
+      min-height: 1.5em;
+      margin: 14px 0 22px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .notice {
+      margin-bottom: 20px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .notice strong { display: block; }
+
+    .error {
+      background: #452632;
+      border-color: #ef9aab;
+      color: #ffe3e9;
+    }
+
+    [hidden] { display: none !important; }
+
+    .stop-heading {
+      font-size: 1.6rem;
+      margin: 28px 0 16px;
+    }
+
+    .directions {
+      display: grid;
+      gap: 18px;
+    }
+
+    .direction {
+      min-width: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .direction h3 {
+      margin: 0;
+      padding: 20px;
+      font-size: 1.1rem;
+      border-bottom: 1px solid var(--border);
+      overflow-wrap: anywhere;
+    }
+
+    .tram-list {
+      list-style: none;
+      margin: 0;
+      padding: 0 20px;
+    }
+
+    .tram {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 20px 0;
+    }
+
+    .tram + .tram { border-top: 1px solid var(--border); }
+
+    .destination {
+      font-size: 1.05rem;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    .arrival {
+      flex-shrink: 0;
+      text-align: right;
+      color: var(--mint);
+    }
+
+    .arrival strong {
+      display: block;
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.05em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .arrival small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+    }
+
+    .empty {
+      padding: 20px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    footer {
+      padding: 24px 16px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (min-width: 680px) {
+      main { padding-top: 56px; }
+      .directions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>my<span>LUAS</span></h1>
+      <p class="intro">Your stop. Your next tram. Live times, refreshed every 20 seconds.</p>
+    </header>
+
+    <label for="stop">Choose your stop</label>
+    <div class="controls">
+      <select id="stop" disabled>
+        <option value="MYS">Loading stops…</option>
+      </select>
+      <button id="refresh" type="button">Refresh</button>
+    </div>
+
+    <p id="status" class="status" role="status" aria-live="polite">
+      Loading live tram times…
+    </p>
+
+    <div id="error" class="notice error" role="alert" hidden></div>
+
+    <section class="notice" aria-labelledby="message-heading">
+      <strong id="message-heading">Service message</strong>
+      <span id="message">Waiting for live information…</span>
+    </section>
+
+    <section aria-labelledby="stop-heading">
+      <h2 id="stop-heading" class="stop-heading">Live departures</h2>
+      <div id="directions" class="directions" aria-busy="true"></div>
+    </section>
+
+    <noscript>
+      <p class="notice error">Please enable JavaScript to load stops and live tram times.</p>
+    </noscript>
+  </main>
+
+  <footer>
+    Data: Transport Infrastructure Ireland. Built by [your name] for BDAIB.
+  </footer>
+
+  <script>
+    "use strict";
+
+    const BASE_URL = "https://luas-class.kluxy.app";
+    const STORAGE_KEY = "myLUAS.stop";
+    const DEFAULT_STOP = "MYS";
+
+    const stopSelect = document.getElementById("stop");
+    const refreshButton = document.getElementById("refresh");
+    const statusElement = document.getElementById("status");
+    const errorElement = document.getElementById("error");
+    const messageElement = document.getElementById("message");
+    const stopHeading = document.getElementById("stop-heading");
+    const directionsElement = document.getElementById("directions");
+
+    const errors = new Map();
+    let selectedStop = DEFAULT_STOP;
+    let stopsLoaded = false;
+    let stopsRequest = null;
+    let forecastController = null;
+    let requestNumber = 0;
+    let lastUpdated = null;
+    let refreshing = false;
+
+    function setError(key, message) {
+      if (message) errors.set(key, message);
+      else errors.delete(key);
+
+      errorElement.textContent = Array.from(errors.values()).join(" ");
+      errorElement.hidden = errors.size === 0;
+    }
+
+    function errorMessage(error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+
+    function updateStatus() {
+      const time = lastUpdated
+        ? lastUpdated.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          })
+        : "—";
+
+      statusElement.textContent =
+        `Last updated: ${time} · ` +
+        (refreshing ? "Refreshing…" : "Auto-refresh every 20 seconds");
+    }
+
+    async function fetchJSON(url, signal) {
+      const controller = new AbortController();
+      let timedOut = false;
+
+      const cancel = () => controller.abort();
+      if (signal) {
+        if (signal.aborted) cancel();
+        else signal.addEventListener("abort", cancel, { once: true });
+      }
+
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, 12000);
+
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}.`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        if (timedOut) {
+          throw new Error("The request timed out. Please try again.");
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+        if (signal) signal.removeEventListener("abort", cancel);
+      }
+    }
+
+    try {
+      selectedStop = localStorage.getItem(STORAGE_KEY) || DEFAULT_STOP;
+    } catch (error) {
+      setError("storage", `Your stop cannot be remembered: ${errorMessage(error)}`);
+    }
+
+    function rememberStop() {
+      try {
+        localStorage.setItem(STORAGE_KEY, selectedStop);
+        setError("storage", null);
+      } catch (error) {
+        setError("storage", `Your stop cannot be remembered: ${errorMessage(error)}`);
+      }
+    }
+
+    function loadStops() {
+      if (stopsRequest) return stopsRequest;
+
+      stopsRequest = (async () => {
+        try {
+          const data = await fetchJSON(`${BASE_URL}/stops`);
+
+          if (!data || !Array.isArray(data.stops) || !data.stops.length) {
+            throw new Error("The server returned an empty or invalid stop list.");
+          }
+
+          for (const stop of data.stops) {
+            if (
+              !stop ||
+              typeof stop.id !== "string" ||
+              typeof stop.name !== "string" ||
+              !["red", "green"].includes(stop.line)
+            ) {
+              throw new Error("The stop list contains invalid stop information.");
+            }
+          }
+
+          const previousStop = selectedStop;
+          if (!data.stops.some(stop => stop.id === selectedStop)) {
+            selectedStop = data.stops.some(stop => stop.id === DEFAULT_STOP)
+              ? DEFAULT_STOP
+              : data.stops[0].id;
+            rememberStop();
+          }
+
+          const fragment = document.createDocumentFragment();
+
+          for (const line of ["red", "green"]) {
+            const group = document.createElement("optgroup");
+            group.label = line === "red" ? "Red Line" : "Green Line";
+
+            data.stops
+              .filter(stop => stop.line === line)
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .forEach(stop => {
+                const option = document.createElement("option");
+                option.value = stop.id;
+                option.textContent = stop.name;
+                group.append(option);
+              });
+
+            fragment.append(group);
+          }
+
+          stopSelect.replaceChildren(fragment);
+          stopSelect.value = selectedStop;
+          stopSelect.disabled = false;
+          stopsLoaded = true;
+          setError("stops", null);
+
+          if (previousStop !== selectedStop) clearDepartures();
+        } catch (error) {
+          setError("stops", `Could not load stops: ${errorMessage(error)}`);
+        }
+      })().finally(() => {
+        stopsRequest = null;
+      });
+
+      return stopsRequest;
+    }
+
+    function clearDepartures() {
+      lastUpdated = null;
+      directionsElement.replaceChildren();
+      messageElement.textContent = "Waiting for live information…";
+      stopHeading.textContent = "Live departures";
+      setError("forecast", null);
+      updateStatus();
+    }
+
+    function validateForecast(data) {
+      if (
+        !data ||
+        typeof data.stopName !== "string" ||
+        typeof data.message !== "string" ||
+        !Array.isArray(data.directions) ||
+        data.directions.length === 0
+      ) {
+        throw new Error("The server returned invalid departure information.");
+      }
+
+      for (const direction of data.directions) {
+        if (
+          !direction ||
+          typeof direction.name !== "string" ||
+          !Array.isArray(direction.trams)
+        ) {
+          throw new Error("The server returned invalid direction information.");
+        }
+
+        for (const tram of direction.trams) {
+          const due = Number(tram && tram.due);
+          if (
+            !tram ||
+            tram.due === null ||
+            String(tram.due).trim() === "" ||
+            !Number.isFinite(due) ||
+            due < 0 ||
+            typeof tram.destination !== "string"
+          ) {
+            throw new Error("The server returned invalid tram information.");
+          }
+        }
+      }
+    }
+
+    function renderForecast(data) {
+      const fragment = document.createDocumentFragment();
+
+      for (const direction of data.directions) {
+        const card = document.createElement("section");
+        card.className = "direction";
+
+        const heading = document.createElement("h3");
+        heading.textContent = direction.name;
+        card.append(heading);
+
+        const trams = [...direction.trams]
+          .sort((a, b) => Number(a.due) - Number(b.due))
+          .slice(0, 3);
+
+        if (!trams.length) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "No trams currently forecast for this direction.";
+          card.append(empty);
+        } else {
+          const list = document.createElement("ul");
+          list.className = "tram-list";
+
+          for (const tram of trams) {
+            const due = Number(tram.due);
+            const row = document.createElement("li");
+            row.className = "tram";
+
+            const destination = document.createElement("span");
+            destination.className = "destination";
+            destination.textContent = tram.destination;
+
+            const arrival = document.createElement("span");
+            arrival.className = "arrival";
+
+            const number = document.createElement("strong");
+            number.textContent = due === 0 ? "Due" : String(due);
+            arrival.append(number);
+
+            const unit = document.createElement("small");
+            unit.textContent = due === 0 ? "now" : due === 1 ? "minute" : "minutes";
+            arrival.append(unit);
+
+            row.append(destination, arrival);
+            list.append(row);
+          }
+
+          card.append(list);
+        }
+
+        fragment.append(card);
+      }
+
+      stopHeading.textContent = data.stopName;
+      messageElement.textContent = data.message.trim() || "No service message provided.";
+      directionsElement.replaceChildren(fragment);
+    }
+
+    async function loadForecast() {
+      if (forecastController) forecastController.abort();
+      const controller = new AbortController();
+      forecastController = controller;
+      const thisRequest = ++requestNumber;
+
+      refreshing = true;
+      refreshButton.disabled = true;
+      directionsElement.setAttribute("aria-busy", "true");
+      updateStatus();
+
+      try {
+        const data = await fetchJSON(
+          `${BASE_URL}/forecast?stop=${encodeURIComponent(selectedStop)}`,
+          controller.signal
+        );
+
+        if (thisRequest !== requestNumber) return;
+
+        validateForecast(data);
+        renderForecast(data);
+        lastUpdated = new Date();
+        setError("forecast", null);
+      } catch (error) {
+        if (thisRequest !== requestNumber || controller.signal.aborted) return;
+
+        setError(
+          "forecast",
+          `Could not load live trams: ${errorMessage(error)} ` +
+          (lastUpdated
+            ? "Showing the last successful update; these times may be out of date."
+            : "Please check your connection and try Refresh.")
+        );
+
+        if (!lastUpdated) {
+          messageElement.textContent = "Service information is currently unavailable.";
+        }
+      } finally {
+        if (thisRequest === requestNumber) {
+          refreshing = false;
+          refreshButton.disabled = false;
+          directionsElement.setAttribute("aria-busy", "false");
+          updateStatus();
+        }
+      }
+    }
+
+    async function refresh() {
+      if (!stopsLoaded) await loadStops();
+      await loadForecast();
+    }
+
+    stopSelect.addEventListener("change", () => {
+      selectedStop = stopSelect.value;
+      rememberStop();
+      clearDepartures();
+      void loadForecast();
+    });
+
+    refreshButton.addEventListener("click", () => void refresh());
+
+    void refresh();
+
+    setInterval(() => {
+      if (!refreshing) void refresh();
+    }, 20000);
+  </script>
+</body>
+</html>
